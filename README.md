@@ -2,14 +2,14 @@
 
 > MICRONATS :rocket: - A nats.io micro-service-framework for nodejs.
 
-With this framework you can easily and very quickly create a micro-service for any requirement.
+With this framework you can easily and very quickly create a micro-service for any requirement. :rainbow:
 
 What's inside?
 * Publish / Subscribe
 * Request / Response
 * Fast & simple data storage
 * Database-Events
-*
+
 Dependencies
 * NATS.io server [https://nats.io/download/]
 
