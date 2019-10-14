@@ -1,26 +1,8 @@
 const Micronats = require('../lib/main')
+const mn = new Micronats(/* options */)
 
-/* options
-{
-    connection : {
-        json : true,
-        port : 4222,
-        servers : ['nats://nats.io:4222']
-    },
-    db : {
-        path : './db',
-        options : {
-            valueEncoding: 'json'
-        }
-    }
-}
-*/
-
-const micronats = new Micronats()
-
-
-micronats.create({
-    servicename : 'user-service',
+mn.create({
+    servicename : 'user-service-example',
     beforeCreate(){
         console.log('HOOK: before create.')
     },
@@ -28,118 +10,102 @@ micronats.create({
         console.log('HOOK: created')
     },
     mounted(){
-        console.log(this.$data)
         console.log('HOOK: mounted. All done. Service is ready')
+
+        // Call local function
+        this.$call.setTimestamp()
+        
+        // Talk to other services with
+        mn.service.request('user-service-example.addUser', 
+            { name : 'yamigr' }, 
+            { max : 1}, 
+            function(msg){
+                console.log(msg)
+        })
+
+        mn.service.request('user-service-example.getAll', 
+            {}, 
+            { max : 1}, 
+            function(msg){
+                console.log(msg)
+            })
+
+        mn.service.request('user-service-example.delUser',
+            {_id: '6oYDedYd'},
+            { max : 1},
+            function(msg){
+                console.log(msg.err)
+            })
+
+        // Subscribe database events
+        mn.service.subscribe('user-service-example.$storage.>', 
+            function(msg, _, subject){
+                console.log(subject, msg)
+        })
     },
     destroyed(){
         console.log('HOOK service destroyed')
     },
     methods : {
         addUser(req, res){
-            // add some service-methods and handle the request and send a response
+            // add some service-methods
             // use this.$storage to store some data
             this.$storage.put(req, function(err){
-                res({err : err})
+                res({message : 'User added'})
             })
         },
-        findUser(req, res){
-            this.$storage.find(req, function(err, data){
-                res({err : err, data : data})
-            }) 
+        getAll(req, res){
+            this.$storage.find({}, function(err, users){
+                res({users : users})
+            })
         },
-        updateUser(req, res){
-            this.$storage.update(req, function(err, data){
-                res({err : err, data : data})
-            }) 
+        getUser(req, res){
+            this.$storage.findOne(req._id, function(err, user){
+                res({user : user})
+            })
+        },
+        delUser(req, res){
+            this.$storage.del(req._id, function(err){
+                res({err : err})
+            })
         }
     },
     funcs : {
         setTimestamp(){
-           // add some local-functions and call them with this.$call.setTimestamp() in other methods
+           // call local-functions with this.$call
+           // access local-variables with this.$data
            this.$data.timestamp = Date() 
         }
     },
     data(){
+        // Local variables
         return {
             timestamp : Date()
         }
     }
 })
 
+///////////////////////////////////////////
+// Listen runs the instances
+mn.listen()
 
-micronats.create({
-    servicename : 'frontend-service',
-    beforeCreate(){
-        console.log('HOOK: before create.')
-    },
-    created(){
-        console.log('HOOK: created')
-    },
-    mounted(){
-        console.log('HOOK: mounted. All done. Service is ready')
-        // Subscribe database events with ( you can use '>'or '*' for wildcard )
-        micronats.service.subscribe('user-service.$storage.>', function(msg, _, subject){
-            console.log('Database event from user-service:', subject, msg)
-        })
-        
-        // Talk with other services with
-        micronats.service.request('user-service.addUser', { name : 'yamigr', email : 'yamigr@42.com' }, { max : 1}, function(msg, _, subject){
-            console.log('Response from user-service method addUser:', msg)
-        })
-
-        micronats.service.request('user-service.addUser', { name : 'joe', email : 'joe@42.com' }, { max : 1}, function(msg, _, subject){
-            console.log('Response from user-service method addUser:', msg)
-        })
-
-        micronats.service.request('user-service.addUser', { name : 'yanosh', email : 'yanosh@42.com' }, { max : 1}, function(msg, _, subject){
-            console.log('Response from user-service method addUser:', msg)
-        })
-
-        micronats.service.request('user-service.findUser', { name: { $in: ['yamigr', 'yanosh'] }} , { max : 1}, function(msg, _, subject){
-            msg.data[0].name = 'Updated baaaaaaam'
-            micronats.service.request('user-service.updateUser', msg.data[0] , { max : 1}, function(msg, _, subject){
-                console.log('Response from user-service method find:', msg)
-            })
-        })
-
-    },
-    destroyed(){
-        console.log('HOOK service destroyed')
-    },
-    methods : {
-    },
-    funcs : {
-    },
-    data(){
-        return {
-            timestamp : Date()
-        }
-    }
-})
-
-
-// Listen
-micronats.listen()
-
+///////////////////////////////////////////
 // Destroy a service by name
 setTimeout(function(){
-    micronats.destroy('testservice')
+    mn.destroy('user-service')
 }, 5000)
 
+///////////////////////////////////////////
 // Events
-micronats.on('err', function(err){
+mn.on('err', function(err){
     console.log('error:', err)
 })
-
-micronats.on('disconnect', function(err){
+mn.on('disconnect', function(err){
     console.log('disconnect')
 })
-
-micronats.on('reconnecting', function(){
+mn.on('reconnecting', function(){
     console.log('reconnecting')
 })
-
-micronats.on('reconnect', function(){
+mn.on('reconnect', function(){
     console.log('reconnect')
 })
-

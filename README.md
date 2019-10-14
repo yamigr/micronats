@@ -2,7 +2,7 @@
 
 > MICRONATS :rocket: - A nats.io micro-service-framework for nodejs.
 
-With this framework you can easily and very quickly create a micro-service for any requirement. :rainbow:
+With this framework you can easily and very quickly create a micro-service for any requirement :rainbow:
 
 What's inside?
 * Publish / Subscribe
@@ -40,9 +40,9 @@ Example subject - **user-service-example.addUser** to call the addUser-method fr
 
 ```js
 const Micronats = require('micronats')
-const micronats = new Micronats(/* options */)
+const mn = new Micronats(/* options */)
 
-micronats.create({
+mn.create({
     servicename : 'user-service-example',
     beforeCreate(){
         console.log('HOOK: before create.')
@@ -52,41 +52,74 @@ micronats.create({
     },
     mounted(){
         console.log('HOOK: mounted. All done. Service is ready')
+   
+        // Call local function
         this.$call.setTimestamp()
+        
         // Talk to other services with
-        micronats.service.request('user-service-example.addUser', 
+        mn.service.request('user-service-example.addUser', 
             { name : 'yamigr' }, 
             { max : 1}, 
-            function(msg, _, subject){
-                console.log('Response from user-service method addUser:', msg)
+            function(msg){
+                console.log(msg)
         })
-        // Subscribe database events with ( you can use '>'or '*' for wildcard )
-        micronats.service.subscribe('user-service-example.$storage.>', 
+
+        mn.service.request('user-service-example.getAll', 
+            {}, 
+            { max : 1}, 
+            function(msg){
+                console.log(msg)
+            })
+
+        mn.service.request('user-service-example.delUser',
+            {_id: '6oYDedYd'},
+            { max : 1},
+            function(msg){
+                console.log(msg.err)
+            })
+
+        // Subscribe database events
+        mn.service.subscribe('user-service-example.$storage.>', 
             function(msg, _, subject){
-                console.log('Database event from user-service-example:', subject, msg)
-        })
+                console.log(subject, msg)
+            })
     },
     destroyed(){
         console.log('HOOK service destroyed')
     },
     methods : {
         addUser(req, res){
-            // add some service-methods and handle the request and send a response
+            // add some service-methods
             // use this.$storage to store some data
             this.$storage.put(req, function(err){
-                res({message : 'User added'})
+                res({message : 'User added', err : err})
+            })
+        },
+        getAll(req, res){
+            this.$storage.find({}, function(err, users){
+                res({users : users})
+            })
+        },
+        getUser(req, res){
+            this.$storage.findOne(req._id, function(err, user){
+                res({user : user})
+            })
+        },
+        delUser(req, res){
+            this.$storage.del(req._id, function(err){
+                res({err : err})
             })
         }
     },
     funcs : {
         setTimestamp(){
-           // call local-functions with this.$call in other methods
-           // access the variables in data with this.$data
+           // call local-functions with this.$call
+           // access local-variables with this.$data
            this.$data.timestamp = Date() 
         }
     },
     data(){
-        // Use local variables with this.$data in other methods
+        // Local variables
         return {
             timestamp : Date()
         }
@@ -95,26 +128,26 @@ micronats.create({
 
 ///////////////////////////////////////////
 // Listen runs the instances
-micronats.listen()
+mn.listen()
 
 ///////////////////////////////////////////
 // Destroy a service by name
 setTimeout(function(){
-    micronats.destroy('user-service')
+    mn.destroy('user-service')
 }, 5000)
 
 ///////////////////////////////////////////
 // Events
-micronats.on('err', function(err){
+mn.on('err', function(err){
     console.log('error:', err)
 })
-micronats.on('disconnect', function(err){
+mn.on('disconnect', function(err){
     console.log('disconnect')
 })
-micronats.on('reconnecting', function(){
+mn.on('reconnecting', function(){
     console.log('reconnecting')
 })
-micronats.on('reconnect', function(){
+mn.on('reconnect', function(){
     console.log('reconnect')
 })
 ```
@@ -138,30 +171,30 @@ let options = {
         }
     }
 }
-const micronats = new Micronats(options)
+const mn = new Micronats(options)
 
 ```
 <a name="service"></a>
 
 ## Service
 
-Publish, subscribe, request or response events. Read [https://www.npmjs.com/package/nats] for further informations.
+Publish, subscribe, request or response events. Check [https://www.npmjs.com/package/nats](nats) for further informations.
 Subscribe wildcard with '*' or '>'.
 Or use a normal nats-cllient instance in another application.
 
 ```js
-micronats.service.publish('servicename.methodname', {/* data */})
+mn.service.publish('servicename.methodname', {/* data */})
 
-micronats.service.subscribe('servicename.$storage.eventname._id', function(msg, _, subject){
-        console.log('Database event from user-service:', subject, msg)
+mn.service.subscribe('servicename.$storage.eventname._id', function(msg, _, subject){
+        console.log(subject, msg)
 })
 
-micronats.service.request('servicename.methodname', function(msg, _, subject){
-        console.log('Response from all servicename.methodname:', subject, msg)
+mn.service.request('servicename.methodname', function(msg){
+        console.log(msg)
 })
 
-micronats.service.requestOne('servicename.methodname', function(msg, _, subject){
-        console.log('Response from one servicename.methodname:', subject, msg)
+mn.service.requestOne('servicename.methodname', function(msg){
+        console.log(msg)
 })
 ```
 
@@ -230,7 +263,7 @@ this.$storage.put({...}, function(err){
 })
 
 // Event from storage
-micronats.service.subscribe('servicename.$storage.put._id', function(msg, _, subject){
+mn.service.subscribe('servicename.$storage.put._id', function(msg, _, subject){
         console.log('Database event:', subject, msg)
 })
 ```
@@ -249,8 +282,8 @@ this.$storage.batch( ops, function(err){
 })
 
 // Event from storage for each bach-entry
-micronats.service.subscribe('servicename.$storage.put | del._id', function(msg, _, subject){
-        console.log('Database event:', subject, msg)
+mn.service.subscribe('servicename.$storage.put | del._id', function(msg, _, subject){
+        console.log(subject, msg)
 })
 ```
 Update a entry
@@ -260,8 +293,8 @@ this.$storage.update({ _id : 'T4gbDiXx3', ...}, function(err){
 })
 
 // Event from storage
-micronats.service.subscribe('servicename.$storage.update._id', function(msg, _, subject){
-        console.log('Database event:', subject, msg)
+mn.service.subscribe('servicename.$storage.update._id', function(msg, _, subject){
+        console.log(subject, msg)
 })
 ```
 
@@ -275,6 +308,10 @@ this.$storage.findOne(_id, function(err, doc){
 Find data
 ```js
 // Mongodb-like find-filter
+this.$storage.find({}, function(err, docs){
+    // returns a array of docs
+})
+
 this.$storage.find( { name: { $in: ['yamigr', 'yanosh'] }}, function(err, docs){
     // returns a array of docs
 })
@@ -286,8 +323,8 @@ this.$storage.del(_id, function(err){
 })
 
 // Event from storage
-micronats.service.subscribe('servicename.$storage.del._id', function(msg, _, subject){
-        console.log('Database event:', subject, msg)
+mn.service.subscribe('servicename.$storage.del._id', function(msg, _, subject){
+        console.log(subject, msg)
 })
 ```
 
