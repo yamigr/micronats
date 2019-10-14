@@ -11,11 +11,19 @@ mn.create({
     },
     mounted(){
         console.log('HOOK: mounted. All done. Service is ready')
-
+   
         // Call local function
         this.$call.setTimestamp()
         
-        // Talk to other services with
+        // Talk to services
+        mn.service.publish('user-service-example.addScore', 
+            { score : 3 }
+        )
+
+        mn.service.publish('dashboard-sevice.scores', 
+            { score : this.$data.score }
+        )
+
         mn.service.request('user-service-example.addUser', 
             { name : 'yamigr' }, 
             { max : 1}, 
@@ -41,7 +49,7 @@ mn.create({
         mn.service.subscribe('user-service-example.$storage.>', 
             function(msg, _, subject){
                 console.log(subject, msg)
-        })
+            })
     },
     destroyed(){
         console.log('HOOK service destroyed')
@@ -51,7 +59,7 @@ mn.create({
             // add some service-methods
             // use this.$storage to store some data
             this.$storage.put(req, function(err){
-                res({message : 'User added'})
+                res({message : 'User added', err : err})
             })
         },
         getAll(req, res){
@@ -68,6 +76,10 @@ mn.create({
             this.$storage.del(req._id, function(err){
                 res({err : err})
             })
+        },
+        addScore(req){
+            this.$data.score += req.score
+            console.log(this.$data.score)
         }
     },
     funcs : {
@@ -80,7 +92,8 @@ mn.create({
     data(){
         // Local variables
         return {
-            timestamp : Date()
+            timestamp : Date(),
+            score : 42
         }
     }
 })
