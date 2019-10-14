@@ -54,16 +54,14 @@ micronats.create({
         console.log('HOOK: mounted. All done. Service is ready')
         this.$call.setTimestamp()
         // Talk to other services with
-        micronats.service
-        .request('user-service-example.addUser', 
+        micronats.service.request('user-service-example.addUser', 
             { name : 'yamigr' }, 
             { max : 1}, 
             function(msg, _, subject){
                 console.log('Response from user-service method addUser:', msg)
         })
         // Subscribe database events with ( you can use '>'or '*' for wildcard )
-        micronats.service
-        .subscribe('user-service-example.$storage.>', 
+        micronats.service.subscribe('user-service-example.$storage.>', 
             function(msg, _, subject){
                 console.log('Database event from user-service-example:', subject, msg)
         })
@@ -76,7 +74,7 @@ micronats.create({
             // add some service-methods and handle the request and send a response
             // use this.$storage to store some data
             this.$storage.put(req, function(err){
-                res({err : err})
+                res({message : 'User added'})
             })
         }
     },
@@ -174,7 +172,7 @@ Methods are the service-handlers. To call a method from another service use the 
 addUser(req, res){
     // add some service-methods and handle the request and send a response
     this.$storage.put(req, function(err){
-        res({err : err})
+        res({message : 'User added'})
     })
 }
 ```
@@ -229,6 +227,11 @@ Insert single data
 // Object without _id
 this.$storage.put({...}, function(err){
 })
+
+// Event from storage
+micronats.service.subscribe('servicename.$storage.put._id', function(msg, _, subject){
+        console.log('Database event:', subject, msg)
+})
 ```
 
 Insert multiple data
@@ -236,16 +239,28 @@ Insert multiple data
 // Handles a batch
 var ops = [
   { type: 'put',  value: {}},
-  { type: 'put',  value: {}}
+  { type: 'put',  value: {}},
+  { type: 'put',  value: {}},
+  { type: 'del',  key: _id},
 ]
 
 this.$storage.batch( ops, function(err){
+})
+
+// Event from storage for each bach-entry
+micronats.service.subscribe('servicename.$storage.put | del._id', function(msg, _, subject){
+        console.log('Database event:', subject, msg)
 })
 ```
 Update a entry
 ```js
 // Object needs to have the _id-prop
 this.$storage.update({ _id : 'T4gbDiXx3', ...}, function(err){
+})
+
+// Event from storage
+micronats.service.subscribe('servicename.$storage.update._id', function(msg, _, subject){
+        console.log('Database event:', subject, msg)
 })
 ```
 
@@ -266,8 +281,12 @@ this.$storage.find( { name: { $in: ['yamigr', 'yanosh'] }}, function(err, docs){
 
 Delete a entry by id
 ```js
-// Mongodb-like find-filter
 this.$storage.del(_id, function(err){
+})
+
+// Event from storage
+micronats.service.subscribe('servicename.$storage.del._id', function(msg, _, subject){
+        console.log('Database event:', subject, msg)
 })
 ```
 

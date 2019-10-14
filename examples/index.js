@@ -16,7 +16,15 @@ const Micronats = require('../lib/main')
 }
 */
 
-const micronats = new Micronats(/* options */)
+const micronats = new Micronats( {
+    connection : {
+        port : 4222,
+        servers : ['nats://nats.io:4222']
+    },
+    db : {
+        path : './blabal'
+    }
+})
 
 
 micronats.create({
