@@ -1,6 +1,6 @@
 {
   "name": "micronats",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "MICRONATS - A nats.io micro-service-framework for nodejs",
   "main": "lib/main.js",
   "scripts": {
