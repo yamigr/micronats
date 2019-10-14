@@ -11,7 +11,7 @@ What's inside?
 * Database-Events
 
 Dependencies
-* NATS.io server [https://nats.io/download/]
+* NATS.io server [https://nats.io/download/](https://nats.io/download/)
 
 ## Content
 * [Installing](#installing)
@@ -147,6 +147,7 @@ const micronats = new Micronats(options)
 
 Publish, subscribe, request or response events. Read [https://www.npmjs.com/package/nats] for further informations.
 Subscribe wildcard with '*' or '>'.
+Or use a normal nats-cllient instance in another application.
 
 ```js
 micronats.service.publish('servicename.methodname', {/* data */})
