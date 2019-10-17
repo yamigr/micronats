@@ -34,9 +34,14 @@ npm i micronats
 <a name="use"></a>
 
 ## Use
-Create a service. Define a servicename and add some methods to handle the requests or publishes.
-Talk to the service with - **servicename.methodname**
-Example subject - **user-service-example.addUser** to call the addUser-method from the user-service-example.
+* Servicename - name of the service
+* Hooks - event callbacks
+* Methods - Middleware for the service
+* Funcs - local functions
+* data - local data
+
+Talk subject - **servicename.methodname**
+Example subject - **user-service-example.addUser**
 
 ```js
 const Micronats = require('micronats')
@@ -45,7 +50,7 @@ const mn = new Micronats(/* options */)
 mn.create({
     servicename : 'user-service-example',
     beforeCreate(){
-        console.log('HOOK: before create.')
+        console.log('HOOK: before create. No data or storage set')
     },
     created(){
         console.log('HOOK: created')
@@ -191,14 +196,16 @@ const mn = new Micronats(options)
 
 ## Service
 
-Publish, subscribe, request or response events. Check [https://www.npmjs.com/package/nats](nats) for further informations.
-Subscribe wildcard with '*' or '>'.
-Or use a normal nats-cllient instance in another application.
-
+Communicate with services.
 ```js
 mn.service.publish('servicename.methodname', {/* data */})
 
 mn.service.subscribe('servicename.$storage.eventname._id', function(msg, _, subject){
+        console.log(subject, msg)
+})
+
+// Wildcard
+mn.service.subscribe('servicename.$storage.eventname.>', function(msg, _, subject){
         console.log(subject, msg)
 })
 
@@ -214,7 +221,7 @@ mn.service.requestOne('servicename.methodname', function(msg){
 <a name="methods"></a>
 
 ## Methods
-Methods are the service-handlers. To call a method from another service use the subject **servicename.methodname** and send the json-data. The data is assigned in req. When it's a request, it's possible to send some data back with res.
+Call a method from another service use the subject **servicename.methodname** and send the json-data.
 ```js
 addUser(req, res){
     // add some service-methods and handle the request and send a response
@@ -227,7 +234,7 @@ addUser(req, res){
 <a name="call"></a>
 
 ## $call
-Create some functions to call them in other methods.
+Call local functions.
 ```js
 funcs : {
     setTimestamp(){
@@ -264,8 +271,7 @@ this.$data.timestamp
 <a name="storage"></a>
 
 ## $storage
-To store some data in the service use **this.$storage** in the methods. 
-When someone put or delete a entry a event will be fired.
+Store data with **this.$storage** in the methods. 
 
 **servicename.$storage.update|put|del._id**
 
