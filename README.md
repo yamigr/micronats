@@ -40,8 +40,9 @@ npm i micronats
 * Funcs - local functions
 * data - local data
 
-Talk subject - **servicename.methodname**
-Example subject - **user-service-example.addUser**
+Subject **servicename.methodname**
+
+Example **user-service-example.addUser**
 
 ```js
 const Micronats = require('micronats')
