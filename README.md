@@ -274,8 +274,6 @@ this.$data.timestamp
 ## $storage
 Store data with **this.$storage** in the methods. 
 
-**servicename.$storage.update|put|del._id**
-
 Insert single data
 ```js
 // Object without _id
