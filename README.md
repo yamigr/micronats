@@ -57,6 +57,9 @@ mn.create({
         console.log('HOOK: created')
     },
     mounted(){
+        // Make some serivce registry here
+        // Or get some data from another services
+        // Start some other stuff
         console.log('HOOK: mounted. All done. Service is ready')
    
         // Call local function
@@ -128,6 +131,9 @@ mn.create({
             this.$data.score += req.score
             console.log(this.$data.score)
         }
+        /*
+            create more methods
+        */
     },
     funcs : {
         setTimestamp(){
