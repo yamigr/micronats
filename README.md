@@ -38,11 +38,39 @@ npm i micronats
 * Hooks - event callbacks
 * Methods - Middleware for the service
 * Funcs - local functions
-* data - local data
+* Data - local data
 
-Subject **servicename.methodname**
+Subject **servicename.methodname**, example **user-service-example.addUser**
 
-Example **user-service-example.addUser**
+```js
+const Micronats = require('micronats')
+const mn = new Micronats(/* options */)
+
+mn.create({
+    servicename : 'user-service-example',
+    beforeCreate(){
+        console.log('HOOK: before create. No data or storage set')
+    },
+    created(){
+        console.log('HOOK: created')
+    },
+    mounted(){
+        console.log('HOOK: mounted. All done. Service is ready')
+    },
+    destroyed(){
+        console.log('HOOK service destroyed')
+    },
+    methods : {
+    },
+    funcs : {
+    },
+    data(){
+        // Local variables
+        return {
+        }
+    }
+})
+```
 
 ```js
 const Micronats = require('micronats')
@@ -59,6 +87,7 @@ mn.create({
     mounted(){
         // Make some serivce registry here
         // Or get some data from another services
+        // Read the storage, ... init some service-components
         // Start some other stuff
         console.log('HOOK: mounted. All done. Service is ready')
    
@@ -158,7 +187,7 @@ mn.listen()
 ///////////////////////////////////////////
 // Destroy a service by name
 setTimeout(function(){
-    mn.destroy('user-service')
+    mn.destroy('user-service-example')
 }, 5000)
 
 ///////////////////////////////////////////
@@ -202,7 +231,6 @@ const mn = new Micronats(options)
 <a name="service"></a>
 
 ## Service
-
 Communicate with services.
 ```js
 mn.service.publish('servicename.methodname', {/* data */})
