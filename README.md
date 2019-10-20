@@ -70,6 +70,9 @@ mn.create({
         }
     }
 })
+
+// Start the services
+mn.listen()
 ```
 
 ```js
