@@ -140,8 +140,8 @@ mn.create({
         addUser(req, res){
             // add some service-methods
             // use this.$storage to store some data
-            this.$storage.put(req, function(err){
-                res({message : 'User added', err : err})
+            this.$storage.put(req, function(err, doc){
+                res({message : 'User added', doc : doc, err : err})
             })
         },
         getAll(req, res){
@@ -314,7 +314,7 @@ Store data with **this.$storage** in the methods.
 Insert single data
 ```js
 // Object without _id
-this.$storage.put({...}, function(err){
+this.$storage.put({...}, function(err, doc){
 })
 
 // Event from storage
